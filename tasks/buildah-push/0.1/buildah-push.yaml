@@ -38,7 +38,6 @@ spec:
       type: string
       default: "true"
   workspaces:
-    - name: source
     - name: containers
   results:
     - name: IMAGE_DIGEST
@@ -47,7 +46,7 @@ spec:
     # List the container images in the storage path
     - name: list-container-images
       image: $(params.BUILDER_IMAGE)
-      workingDir: $(workspaces.source.path)
+      workingDir: $(workspaces.containers.path)
       script: |
         buildah --root $(workspaces.containers.path)/storage ls -a
       securityContext:
@@ -55,7 +54,7 @@ spec:
     # Push the
     - name: push
       image: $(params.BUILDER_IMAGE)
-      workingDir: $(workspaces.source.path)
+      workingDir: $(workspaces.containers.path)
       script: |
         # Determine if All Images should be pushed; should be true
         PUSH_ALL="$( if [ $(params.PUSH_ALL) = true ]; then echo '--all'; fi )"
