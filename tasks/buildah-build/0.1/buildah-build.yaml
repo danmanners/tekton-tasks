@@ -1,0 +1,62 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: buildah-build
+  labels:
+    app.kubernetes.io/version: "0.1"
+  annotations:
+    tekton.dev/pipelines.minVersion: "0.17.0"
+    tekton.dev/categories: Containerization, Build Tools
+    tekton.dev/displayName: Buildah Multi-Arch Capable Image Builder
+    tekton.dev/platforms: "linux/amd64,linux/arm64,linux/s390x,linux/ppc64le"
+spec:
+  description: >-
+    This buildah task will allow a user to build multi-architecture container images
+    and add them to a given manifest. Based on the Buildah 0.3 task from hub.tekton.dev
+  params:
+    - name: MANIFEST
+      description: Name of the manifest that should be created
+      default: tekton-image-build
+    - name: ARCH
+      description: Name of the system architecture you want to build the container for.
+      default: "amd64"
+    - name: IMAGE
+      description: Reference of the image buildah will produce.
+    - name: BUILDER_IMAGE
+      description: The location of the buildah builder image.
+      default: quay.io/buildah/stable:v1.26.2
+    - name: STORAGE_DRIVER
+      description: Set buildah storage driver
+      default: overlay
+    - name: DOCKERFILE
+      description: Path to the Dockerfile to build.
+      default: ./Dockerfile
+    - name: CONTEXT
+      description: Path to the directory to use as context.
+      default: .
+    - name: FORMAT
+      description: The format of the built container, oci or docker
+      default: "oci"
+    - name: BUILD_EXTRA_ARGS
+      description: Extra parameters passed for the build command when building images.
+      default: ""
+  workspaces:
+    - name: source
+    - name: containers
+  steps:
+    - name: build
+      image: $(params.BUILDER_IMAGE)
+      workingDir: $(workspaces.source.path)
+      securityContext:
+        privileged: true
+      script: |
+        buildah --root $(workspaces.containers.path)/storage bud \
+        --manifest $(params.MANIFEST) \
+        --tag $(params.IMAGE) \
+        --arch $(params.ARCH) \
+        --storage-driver=$(params.STORAGE_DRIVER) \
+        --format=$(params.FORMAT) \
+        --no-cache \
+        $(params.BUILD_EXTRA_ARGS) \
+        -f $(params.DOCKERFILE) $(params.CONTEXT)

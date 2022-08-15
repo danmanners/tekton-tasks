@@ -1,0 +1,36 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: buildah-create-manifest
+  labels:
+    app.kubernetes.io/version: "0.1"
+  annotations:
+    tekton.dev/categories: Multi-Architecture Image Build
+    tekton.dev/pipelines.minVersion: "0.17.0"
+    tekton.dev/tags: image-build
+    tekton.dev/platforms: "linux/amd64,linux/arm64,linux/s390x,linux/ppc64le"
+spec:
+  description: >-
+    This buildah task will create the manifest for users to utilize to tag multi-architecture
+    container images to. Based on the Buildah 0.3 task from hub.tekton.dev.
+  params:
+    - name: MANIFEST
+      description: Name of the manifest that should be created
+      default: tekton-image-build
+    - name: BUILDER_IMAGE
+      description: The location of the buildah builder image.
+      default: quay.io/buildah/stable:v1.26.2
+  workspaces:
+    - name: source
+    - name: containers
+  steps:
+    - name: manifest-create
+      image: $(params.BUILDER_IMAGE)
+      workingDir: $(workspaces.source.path)
+      script: |
+        buildah --root $(workspaces.containers.path)/storage \
+        manifest create \
+        $(params.MANIFEST)
+      securityContext:
+        privileged: true

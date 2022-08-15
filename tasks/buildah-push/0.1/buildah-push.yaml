@@ -1,0 +1,72 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: buildah-push
+  labels:
+    app.kubernetes.io/version: "0.1"
+  annotations:
+    tekton.dev/categories: Buildah Multi-Architecture Image Push
+    tekton.dev/pipelines.minVersion: "0.17.0"
+    tekton.dev/tags: image-push
+    tekton.dev/platforms: "linux/amd64,linux/s390x,linux/ppc64le,linux/arm64"
+spec:
+  description: >-
+    This buildah task will allow a user to push their multi-architecture container
+    images to a given repository. It is based on the Buildah 0.3 task from hub.tekton.dev.
+  params:
+    - name: MANIFEST
+      description: Name of the manifest that should be pushed
+      default: tekton-image-build
+    - name: IMAGE
+      description: Reference of the image buildah will produce.
+    - name: BUILDER_IMAGE
+      description: The location of the buildah builder image.
+      default: quay.io/buildah/stable:v1.26.2
+    - name: TLSVERIFY
+      description: Verify the TLS on the registry endpoint (for push/pull to a non-TLS registry)
+      default: "true"
+    - name: FORMAT
+      description: The format of the built container, oci or docker
+      default: "oci"
+    - name: PUSH_EXTRA_ARGS
+      description: Extra parameters passed for the push command when pushing images.
+      type: string
+      default: ""
+    - name: PUSH_ALL
+      description: "Set to `true` or `false`"
+      type: string
+      default: "true"
+  workspaces:
+    - name: source
+    - name: containers
+  results:
+    - name: IMAGE_DIGEST
+      description: Digest of the image just built.
+  steps:
+    # List the container images in the storage path
+    - name: list-container-images
+      image: $(params.BUILDER_IMAGE)
+      workingDir: $(workspaces.source.path)
+      script: |
+        buildah --root $(workspaces.containers.path)/storage ls -a
+      securityContext:
+        privileged: true
+    # Push the
+    - name: push
+      image: $(params.BUILDER_IMAGE)
+      workingDir: $(workspaces.source.path)
+      script: |
+        # Determine if All Images should be pushed; should be true
+        PUSH_ALL="$( if [ $(params.PUSH_ALL) = true ]; then echo '--all'; fi )"
+
+        # Push the container image up to the container registry
+        buildah --root $(workspaces.containers.path)/storage \
+        manifest push \
+        --tls-verify=$(params.TLSVERIFY) \
+        --format $(params.FORMAT) \
+        $(params.PUSH_EXTRA_ARGS) \
+        $(params.MANIFEST) \
+        docker://$(params.IMAGE) ${PUSH_ALL}
+      securityContext:
+        privileged: true
