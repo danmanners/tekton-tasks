@@ -22,12 +22,11 @@ spec:
       description: The location of the buildah builder image.
       default: quay.io/buildah/stable:v1.26.2
   workspaces:
-    - name: source
     - name: containers
   steps:
     - name: manifest-create
       image: $(params.BUILDER_IMAGE)
-      workingDir: $(workspaces.source.path)
+      workingDir: $(workspaces.containers.path)
       script: |
         buildah --root $(workspaces.containers.path)/storage \
         manifest create \
