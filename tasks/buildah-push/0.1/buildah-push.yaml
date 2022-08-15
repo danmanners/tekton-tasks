@@ -19,7 +19,7 @@ spec:
       description: Name of the manifest that should be pushed
       default: tekton-image-build
     - name: IMAGE
-      description: Reference of the image buildah will produce.
+      description: Reference of the image buildah should push to the container registry
     - name: BUILDER_IMAGE
       description: The location of the buildah builder image.
       default: quay.io/buildah/stable:v1.26.2
@@ -30,7 +30,7 @@ spec:
       description: The format of the built container, oci or docker
       default: "oci"
     - name: PUSH_EXTRA_ARGS
-      description: Extra parameters passed for the push command when pushing images.
+      description: Extra parameters passed for the push command when pushing images
       type: string
       default: ""
     - name: PUSH_ALL
