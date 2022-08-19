@@ -47,14 +47,16 @@ spec:
     - name: list-container-images
       image: $(params.BUILDER_IMAGE)
       workingDir: $(workspaces.containers.path)
+      # securityContext:
+      #   privileged: true
       script: |
         buildah --root $(workspaces.containers.path)/storage ls -a
-      securityContext:
-        privileged: true
     # Push the
     - name: push
       image: $(params.BUILDER_IMAGE)
       workingDir: $(workspaces.containers.path)
+      # securityContext:
+      #   privileged: true
       script: |
         # Determine if All Images should be pushed; should be true
         PUSH_ALL="$( if [ $(params.PUSH_ALL) = true ]; then echo '--all'; fi )"
@@ -67,5 +69,3 @@ spec:
         $(params.PUSH_EXTRA_ARGS) \
         $(params.MANIFEST) \
         docker://$(params.IMAGE) ${PUSH_ALL}
-      securityContext:
-        privileged: true

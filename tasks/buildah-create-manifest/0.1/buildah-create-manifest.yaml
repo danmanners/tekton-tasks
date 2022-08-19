@@ -27,9 +27,9 @@ spec:
     - name: manifest-create
       image: $(params.BUILDER_IMAGE)
       workingDir: $(workspaces.containers.path)
+      # securityContext:
+      #   privileged: true
       script: |
         buildah --root $(workspaces.containers.path)/storage \
         manifest create \
         $(params.MANIFEST)
-      securityContext:
-        privileged: true

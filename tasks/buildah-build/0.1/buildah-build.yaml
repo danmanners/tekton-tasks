@@ -48,8 +48,8 @@ spec:
     - name: build
       image: $(params.BUILDER_IMAGE)
       workingDir: $(workspaces.source.path)
-      securityContext:
-        privileged: true
+      # securityContext:
+      #   privileged: true
       script: |
         buildah --root $(workspaces.containers.path)/storage bud \
         --manifest $(params.MANIFEST) \
