@@ -20,16 +20,18 @@ spec:
       default: tekton-image-build
     - name: BUILDER_IMAGE
       description: The location of the buildah builder image.
-      default: quay.io/buildah/stable:v1.26.2
+      default: quay.io/buildah/stable:v1.23.3
   workspaces:
     - name: containers
   steps:
     - name: manifest-create
       image: $(params.BUILDER_IMAGE)
       workingDir: $(workspaces.containers.path)
-      # securityContext:
-      #   privileged: true
+      securityContext:
+        privileged: true
       script: |
         buildah --root $(workspaces.containers.path)/storage \
-        manifest create \
-        $(params.MANIFEST)
+        manifest create $(params.MANIFEST) | tr -d '\n' > $(results.digest.path)
+  results:
+    - name: digest
+      description: Digest of the created manifest from the buildah-create-manifest task

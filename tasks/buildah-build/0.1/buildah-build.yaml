@@ -25,7 +25,7 @@ spec:
       description: Reference of the image buildah will produce.
     - name: BUILDER_IMAGE
       description: The location of the buildah builder image.
-      default: quay.io/buildah/stable:v1.26.2
+      default: quay.io/buildah/stable:v1.23.3
     - name: STORAGE_DRIVER
       description: Set buildah storage driver
       default: overlay
@@ -48,15 +48,21 @@ spec:
     - name: build
       image: $(params.BUILDER_IMAGE)
       workingDir: $(workspaces.source.path)
-      # securityContext:
-      #   privileged: true
+      securityContext:
+        privileged: true
       script: |
-        buildah --root $(workspaces.containers.path)/storage bud \
-        --manifest $(params.MANIFEST) \
+        # Install Skopeo
+        yum install skopeo -y
+
+        # Build the Container
+        buildah bud \
         --tag $(params.IMAGE) \
-        --arch $(params.ARCH) \
         --storage-driver=$(params.STORAGE_DRIVER) \
-        --format=$(params.FORMAT) \
-        --no-cache \
-        $(params.BUILD_EXTRA_ARGS) \
+        --format=$(params.FORMAT) $(params.BUILD_EXTRA_ARGS) \
         -f $(params.DOCKERFILE) $(params.CONTEXT)
+
+        # Use Skopeo to bundle everything to the share drive
+        mkdir -p $(workspaces.containers.path)/oci-archives
+
+        skopeo copy containers-storage:$(params.IMAGE) \
+        oci-archive:$(workspaces.containers.path)/oci-archives/$(params.MANIFEST)-$(params.ARCH).tar.gz
