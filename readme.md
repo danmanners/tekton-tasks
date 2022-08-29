@@ -9,16 +9,14 @@ The structure of this project is loosely based on the [official Tekton CI/CD Cat
 ```
 /task                                       👈 the kind of the resource
 
-    /buildah-create-manifest                👈 definition file must have same name
+    /buildah-build                          👈 definition file must have same name
 
         /readme.md                          👈 owners of this tasks and changelog
-
-        /how-to-use.md                      👈 symlink to the latest version of the task readme file
 
         /0.1
             /readme.md                      👈 instructions on how to use the task
 
-            /buildah-create-manifest.yaml   👈 should match task name; installs Task (single namespace)
+            /buildah-build.yaml             👈 should match task name; installs Task (single namespace)
 
             /kustomization.yaml             👈 install the resource as a ClusterTask (all namespaces)
 
